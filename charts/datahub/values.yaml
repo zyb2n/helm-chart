@@ -1,0 +1,132 @@
+datahub-gms:
+  enabled: true
+  image:
+    repository: 795586375822.dkr.ecr.us-west-2.amazonaws.com/datahub-gms
+    tag: "v0.1.20"
+  service:
+    type: ClusterIP
+  extraEnvs:
+    - name: ES_BULK_REQUESTS_LIMIT
+      value: "100"
+
+acryl-api-gateway:
+  enabled: true
+  existingApiKeySecret:
+    name: play-secret
+    key: uuid_secret
+  image:
+    repository: 795586375822.dkr.ecr.us-west-2.amazonaws.com/acryl-api-gateway
+    tag: "latest"
+  service:
+    type: NodePort
+  ingress:
+    enabled: false
+
+datahub-frontend:
+  enabled: true
+  existingGmsSecret:
+    name: play-secret
+    key: uuid_secret
+  adminPasswordSecret:
+    name: datahub-secrets
+    key: datahub-password
+  image:
+    repository: 795586375822.dkr.ecr.us-west-2.amazonaws.com/datahub-frontend-react
+    tag: "v0.1.20"
+  service:
+    type: NodePort
+  ingress:
+    enabled: false
+
+datahub-mae-consumer:
+  enabled: true
+  image:
+    repository: 795586375822.dkr.ecr.us-west-2.amazonaws.com/datahub-mae-consumer
+    tag: "v0.1.20"
+
+datahub-mce-consumer:
+  enabled: true
+  image:
+    repository: 795586375822.dkr.ecr.us-west-2.amazonaws.com/datahub-mce-consumer
+    tag: "v0.1.20"
+
+elasticsearchSetupJob:
+  enabled: true
+  image:
+    repository: 795586375822.dkr.ecr.us-west-2.amazonaws.com/datahub-elasticsearch-setup
+    tag: "v0.1.20"
+  extraEnvs:
+    - name: USE_AWS_ELASTICSEARCH
+      value: "true"
+
+kafkaSetupJob:
+  enabled: true
+  image:
+    repository: 795586375822.dkr.ecr.us-west-2.amazonaws.com/datahub-kafka-setup
+    tag: "v0.1.20"
+
+mysqlSetupJob:
+  enabled: true
+  image:
+    repository: 795586375822.dkr.ecr.us-west-2.amazonaws.com/datahub-mysql-setup
+    tag: "v0.1.20"
+
+datahubUpgrade:
+  enabled: true
+  image:
+    repository: 795586375822.dkr.ecr.us-west-2.amazonaws.com/datahub-upgrade
+    tag: "v0.1.20"
+  restoreBackup:
+    s3Bucket: datahub-rds-backup
+    s3Path: "PATH"
+  serviceAccount: s3-backup-read
+  noCodeDataMigration:
+    sqlDbType: "MYSQL"
+
+global:
+  graph_service_impl: elasticsearch
+  datahub_analytics_enabled: true
+  datahub_standalone_consumers_enabled: false
+
+  elasticsearch:
+    host: PARAMETER_ELASTICSEARCH_ENDPOINT
+    port: "443"
+    useSSL: "true"
+    auth:
+      createUser: false
+      username: ELASTICSEARCH_USERNAME
+      password:
+        secretRef: elasticsearch-secrets
+        secretKey: elasticsearch-password
+
+  kafka:
+    bootstrap:
+      server: "PARAMETER_BOOTSTRAP_BROKERS"
+    zookeeper:
+      server: "PARAMETER_ZOOKEEEPER_CONNECT"
+    schemaregistry:
+      url: "http://prerequisites-cp-schema-registry:8081"
+    partitions: 3
+    replicationFactor: 3
+
+  sql:
+    datasource:
+      host: "PARAMETER_RDS_ENDPOINT:3306"
+      hostForMysqlClient: "PARAMETER_RDS_ENDPOINT"
+      port: "3306"
+      url: "jdbc:mysql://PARAMETER_RDS_ENDPOINT:3306/DB_NAME?verifyServerCertificate=false&useSSL=true&useUnicode=yes&characterEncoding=UTF-8&enabledTLSProtocols=TLSv1.2"
+      driver: "com.mysql.jdbc.Driver"
+      createUser: false
+      username: "PARAMETER_RDS_USERNAME"
+      password:
+        secretRef: mysql-secrets
+        secretKey: mysql-password
+
+  datahub:
+    gms:
+      port: "8080"
+    frontend:
+      port: "9002"
+    mae_consumer:
+      port: "9091"
+    appVersion: "1.0"

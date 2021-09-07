@@ -1,0 +1,18 @@
+cp-helm-charts:
+  # Schema registry is under the community license
+  cp-schema-registry:
+    enabled: true
+    kafka:
+      bootstrapServers: "PARAMETER_BOOTSTRAP_BROKERS"  # <<release-name>>-kafka:9092
+  cp-kafka:
+    enabled: false
+  cp-zookeeper:
+    enabled: false
+  cp-kafka-rest:
+    enabled: false
+  cp-kafka-connect:
+    enabled: false
+  cp-ksql-server:
+    enabled: false
+  cp-control-center:
+    enabled: false
